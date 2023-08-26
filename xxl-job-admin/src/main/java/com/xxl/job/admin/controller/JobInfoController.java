@@ -1,5 +1,7 @@
 package com.xxl.job.admin.controller;
 
+import com.xxl.job.admin.controller.request.TaskPageRequest;
+import com.xxl.job.admin.controller.resolver.PageResult;
 import com.xxl.job.admin.core.cron.CronExpression;
 import com.xxl.job.admin.core.exception.XxlJobException;
 import com.xxl.job.admin.core.model.XxlJobGroup;
@@ -12,7 +14,9 @@ import com.xxl.job.admin.core.thread.JobScheduleHelper;
 import com.xxl.job.admin.core.thread.JobTriggerPoolHelper;
 import com.xxl.job.admin.core.trigger.TriggerTypeEnum;
 import com.xxl.job.admin.core.util.I18nUtil;
+import com.xxl.job.admin.core.util.PageUtil;
 import com.xxl.job.admin.dao.XxlJobGroupDao;
+import com.xxl.job.admin.dao.XxlJobInfoDao;
 import com.xxl.job.admin.service.LoginService;
 import com.xxl.job.admin.service.XxlJobService;
 import com.xxl.job.core.biz.model.ReturnT;
@@ -23,9 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -36,7 +38,7 @@ import java.util.*;
  * index controller
  * @author xuxueli 2015-12-19 16:13:16
  */
-@Controller
+@RestController
 @RequestMapping("/jobinfo")
 public class JobInfoController {
 	private static Logger logger = LoggerFactory.getLogger(JobInfoController.class);
@@ -45,6 +47,9 @@ public class JobInfoController {
 	private XxlJobGroupDao xxlJobGroupDao;
 	@Resource
 	private XxlJobService xxlJobService;
+
+	@Resource
+	private XxlJobInfoDao xxlJobInfoDao;
 	
 	@RequestMapping
 	public String index(HttpServletRequest request, Model model, @RequestParam(required = false, defaultValue = "-1") int jobGroup) {
@@ -97,50 +102,64 @@ public class JobInfoController {
 			throw new RuntimeException(I18nUtil.getString("system_permission_limit") + "[username="+ loginUser.getUsername() +"]");
 		}
 	}
-	
-	@RequestMapping("/pageList")
+
+	@PostMapping("/queryPage")
 	@ResponseBody
-	public Map<String, Object> pageList(@RequestParam(required = false, defaultValue = "0") int start,  
-			@RequestParam(required = false, defaultValue = "10") int length,
-			int jobGroup, int triggerStatus, String jobDesc, String executorHandler, String author) {
-		
-		return xxlJobService.pageList(start, length, jobGroup, triggerStatus, jobDesc, executorHandler, author);
+	public ReturnT<PageResult<XxlJobInfo>> queryTaskPage(@RequestBody TaskPageRequest request) {
+		if (Objects.isNull(request.getCurrent())) {
+			request.setCurrent(1);
+		}
+		if (Objects.isNull(request.getPageSize())) {
+			request.setPageSize(10);
+		}
+		if (Objects.isNull(request.getJobGroup())) {
+			request.setJobGroup(0);
+		}
+		if (Objects.isNull(request.getTriggerStatus())) {
+			request.setTriggerStatus(-1);
+		}
+		int offset = PageUtil.getOffset(request.getCurrent(), request.getPageSize());
+		List<XxlJobInfo> data = this.xxlJobInfoDao.pageList(offset, request.getPageSize(), request.getJobGroup(), request.getTriggerStatus(), request.getJobDesc(), request.getExecutorHandler(), request.getAuthor());
+		int total = this.xxlJobInfoDao.pageListCount(offset, request.getPageSize(), request.getJobGroup(), request.getTriggerStatus(), request.getJobDesc(), request.getExecutorHandler(), request.getAuthor());
+		PageResult<XxlJobInfo> result = new PageResult<>();
+		result.setList(data);
+		result.setTotal(total);
+		result.setCurrent(request.getCurrent());
+		result.setPageSize(request.getPageSize());
+		return ReturnT.success(result);
 	}
-	
-	@RequestMapping("/add")
-	@ResponseBody
-	public ReturnT<String> add(XxlJobInfo jobInfo) {
+
+	@PostMapping("/add")
+	public ReturnT<String> addTask(@RequestBody XxlJobInfo jobInfo) {
 		return xxlJobService.add(jobInfo);
 	}
-	
-	@RequestMapping("/update")
+
+	@PostMapping("/update")
 	@ResponseBody
-	public ReturnT<String> update(XxlJobInfo jobInfo) {
+	public ReturnT<String> updateTask(@RequestBody XxlJobInfo jobInfo) {
 		return xxlJobService.update(jobInfo);
 	}
-	
-	@RequestMapping("/remove")
+
+	@GetMapping("/remove")
 	@ResponseBody
-	public ReturnT<String> remove(int id) {
+	public ReturnT<String> removeTask(@RequestParam("id") int id) {
 		return xxlJobService.remove(id);
 	}
-	
-	@RequestMapping("/stop")
+
+	@GetMapping("/stop")
 	@ResponseBody
-	public ReturnT<String> pause(int id) {
+	public ReturnT<String> stopTask(@RequestParam("id") int id) {
 		return xxlJobService.stop(id);
 	}
-	
-	@RequestMapping("/start")
+
+	@GetMapping("/start")
 	@ResponseBody
-	public ReturnT<String> start(int id) {
+	public ReturnT<String> startTask(@RequestParam("id") int id) {
 		return xxlJobService.start(id);
 	}
-	
-	@RequestMapping("/trigger")
-	@ResponseBody
-	//@PermissionLimit(limit = false)
-	public ReturnT<String> triggerJob(int id, String executorParam, String addressList) {
+
+	@PostMapping("/trigger")
+	public ReturnT<String> triggerTask(@RequestParam("id") int id, @RequestParam("executorParam") String executorParam, @RequestParam("addressList") String addressList) {
 		// force cover job param
 		if (executorParam == null) {
 			executorParam = "";
@@ -150,9 +169,8 @@ public class JobInfoController {
 		return ReturnT.SUCCESS;
 	}
 
-	@RequestMapping("/nextTriggerTime")
-	@ResponseBody
-	public ReturnT<List<String>> nextTriggerTime(String scheduleType, String scheduleConf) {
+	@GetMapping("/nextTriggerTime")
+	public ReturnT<List<String>> nextTriggerTime(@RequestParam("scheduleType") String scheduleType, @RequestParam("scheduleConf") String scheduleConf) {
 
 		XxlJobInfo paramXxlJobInfo = new XxlJobInfo();
 		paramXxlJobInfo.setScheduleType(scheduleType);
@@ -171,9 +189,9 @@ public class JobInfoController {
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
-			return new ReturnT<List<String>>(ReturnT.FAIL_CODE, (I18nUtil.getString("schedule_type")+I18nUtil.getString("system_unvalid")) + e.getMessage());
+			return ReturnT.fail(I18nUtil.getString("schedule_type") + I18nUtil.getString("system_unvalid") + e.getMessage());
 		}
-		return new ReturnT<List<String>>(result);
+		return ReturnT.success(result);
 
 	}
 	
