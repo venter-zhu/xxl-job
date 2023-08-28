@@ -6,14 +6,14 @@ import * as IndexController from './IndexController';
 import * as JobGroupController from './JobGroupController';
 import * as jobApiController from './jobApiController';
 import * as jobCodeController from './jobCodeController';
+import * as jobInfoController from './jobInfoController';
 import * as jobLogController from './jobLogController';
-import * as taskController from './taskController';
 import * as userController from './userController';
 export default {
   userController,
-  taskController,
   IndexController,
   jobLogController,
+  jobInfoController,
   JobGroupController,
   jobCodeController,
   jobApiController,

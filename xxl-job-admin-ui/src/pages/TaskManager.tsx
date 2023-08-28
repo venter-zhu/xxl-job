@@ -6,7 +6,7 @@ import {
   startTask,
   stopTask,
   updateTask,
-} from '@/services/xxl-job/taskController';
+} from '@/services/xxl-job/jobInfoController';
 import { queryUserList } from '@/services/xxl-job/userController';
 import { DownOutlined, PlusOutlined, StopOutlined, SyncOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns, ProFormInstance } from '@ant-design/pro-components';

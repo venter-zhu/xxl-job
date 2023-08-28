@@ -101,30 +101,4 @@ public class LoginService {
         }
         return null;
     }
-
-
-    /**
-     * 判断是否登录
-     *
-     * @param request
-     * @param response
-     * @return
-     */
-    public XxlJobUser isLogin(HttpServletRequest request, HttpServletResponse response) {
-        String cookieToken = CookieUtil.getValue(request, LOGIN_IDENTITY_KEY);
-        if (cookieToken != null) {
-            XxlJobUser cookieUser = null;
-            try {
-                cookieUser = parseToken(cookieToken);
-            } catch (Exception e) {
-                logout(request, response);
-            }
-            if (cookieUser != null) {
-                return xxlJobUserDao.loadByUserName(cookieUser.getUsername());
-            }
-        }
-        return null;
-    }
-
-
 }

@@ -8,7 +8,6 @@ import com.xxl.job.admin.service.XxlJobService;
 import com.xxl.job.core.biz.model.ReturnT;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
@@ -17,8 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
@@ -74,7 +71,7 @@ public class IndexController {
     public ReturnT<XxlJobUser> isLogin(HttpServletRequest request, HttpServletResponse response) {
         ReturnT<XxlJobUser> result = new ReturnT<>();
 
-        XxlJobUser loginUser = loginService.isLogin(request, response);
+        XxlJobUser loginUser = loginService.ifLogin(request, response);
         if (Objects.isNull(loginUser)) {
             result.setCode(401);
         } else {

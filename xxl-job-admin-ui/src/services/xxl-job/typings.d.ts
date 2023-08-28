@@ -21,6 +21,26 @@ declare namespace API {
     title?: string;
   };
 
+  type index2Params = {
+    jobGroup?: number;
+  };
+
+  type index3Params = {
+    jobGroup?: number;
+  };
+
+  type index4Params = {
+    jobGroup?: number;
+  };
+
+  type index5Params = {
+    jobGroup?: number;
+  };
+
+  type indexParams = {
+    jobGroup?: number;
+  };
+
   type loadGroupByIdParams = {
     id: number;
   };
@@ -205,13 +225,9 @@ declare namespace API {
 
   type XxlJobGroup = {
     id?: number;
-    /** 执行器的AppName */
-    appname: string;
-    /** 执行器昵称 */
+    appname?: string;
     title?: string;
-    /** 注册类型，0=自动注册、1=手动录入 */
     addressType?: number;
-    /** 执行器地址列表 */
     addressList?: string;
     updateTime?: string;
     registryList?: string[];
@@ -242,8 +258,6 @@ declare namespace API {
     triggerStatus?: number;
     triggerLastTime?: number;
     triggerNextTime?: number;
-    webhook?: number;
-    unionId?: string;
   };
 
   type XxlJobLog = {
@@ -270,6 +284,5 @@ declare namespace API {
     password?: string;
     role?: number;
     permission?: string;
-    unionId?: string;
   };
 }

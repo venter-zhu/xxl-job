@@ -31,7 +31,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(permissionInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(permissionInterceptor).addPathPatterns("/**")
+                .excludePathPatterns("/v3/api-docs");
         registry.addInterceptor(cookieInterceptor).addPathPatterns("/**");
     }
 
